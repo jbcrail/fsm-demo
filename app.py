@@ -103,7 +103,10 @@ def state_as_json(name, pk):
     for edge in obj.fsm.edges:
         state0, _, event = edge
         if state0 == obj.state:
-            events.append(dict(name=event.name, url=url_for('put', name=name, pk=pk, event=event.name)))
+            events.append(dict(
+                name=event.name,
+                url=url_for('put', name=name, pk=pk, event=event.name)
+                ))
     return jsonify(dict(
         state=obj.state.name,
         image_url=url_for('state_as_png', name=name, pk=pk),
@@ -120,7 +123,10 @@ def put(name, pk, event):
         for edge in obj.fsm.edges:
             state0, _, event = edge
             if state0 == state1:
-                events.append(dict(name=event.name, url=url_for('put', name=name, pk=pk, event=event.name)))
+                events.append(dict(
+                    name=event.name,
+                    url=url_for('put', name=name, pk=pk, event=event.name)
+                    ))
         return jsonify(dict(
             state=state1.name,
             image_url=url_for('state_as_png', name=name, pk=pk),
@@ -140,7 +146,7 @@ def get(name, pk):
 @app.route('/')
 def post(name='connections'):
     uuid4 = uuid.uuid4()
-    obj = init(name, uuid4)
+    init(name, uuid4)
     return redirect(url_for('get', name=name, pk=uuid4))
 
 
