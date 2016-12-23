@@ -9,7 +9,8 @@ import uuid
 from flask import Flask, jsonify, redirect, render_template, send_file, url_for
 import graphviz as gv
 
-from machines import tcp
+from machines import button, regex, tcp
+from registry import registry
 
 
 SHELVE_DB = 'shelve'
@@ -26,7 +27,7 @@ app = Flask(__name__)
 
 def init(name, pk):
     key = name + ':' + str(pk)
-    obj = tcp.Connection()
+    obj = registry[name]()
     db.setdefault(key, default=dict(state=obj.state))
     obj.state = obj.fsm.states(db[key]['state'])
     return obj
@@ -139,10 +140,10 @@ def put(name, pk, event):
 @app.route('/<name>/<uuid:pk>')
 def get(name, pk):
     obj = init(name, pk)
-    return render_template('state.html', fsm=obj.fsm, state=obj.state, pk=pk)
+    return render_template('state.html', fsm=obj.fsm, state=obj.state, name=name, pk=pk)
 
 
-@app.route('/<name>/', methods=['POST'])
+@app.route('/<name>/', methods=['GET', 'POST'])
 @app.route('/')
 def post(name='connections'):
     uuid4 = uuid.uuid4()

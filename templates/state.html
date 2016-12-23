@@ -12,13 +12,13 @@
       <div id="valid-events" class="list-group">
       {% for edge in fsm.edges %}
       {% if edge[0] == state %}
-      <a href="#" data-target="{{ url_for('put', name='connections', pk=pk, event=edge[2].name) }}" class="list-group-item">{{ edge[2].name }}</a>
+      <a href="#" data-target="{{ url_for('put', name=name, pk=pk, event=edge[2].name) }}" class="list-group-item">{{ edge[2].name }}</a>
       {% endif %}
       {% endfor %}
       </div>
     </div>
     <div class="col-xs-6">
-      <img id="state-diagram" src="{{ url_for('state_as_png', name='connections', pk=pk) }}" class="img-responsive" />
+      <img id="state-diagram" src="{{ url_for('state_as_png', name=name, pk=pk) }}" class="img-responsive" />
     </div>
   </div>
 </div>

@@ -2,6 +2,7 @@ import time
 
 from enums import UniqueIntEnum
 from fsm import FSM
+from registry import register
 
 
 class ConnectionState(UniqueIntEnum):
@@ -138,7 +139,10 @@ class ConnectionFSM(FSM):
                             ConnectionState.Closed)
 
 
+@register
 class Connection(object):
+    __clsid__ = 'connections'
+
     def __init__(self):
         self.fsm = ConnectionFSM()
         self._state = self.fsm.states.default()

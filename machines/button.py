@@ -1,5 +1,6 @@
 from enums import UniqueIntEnum
 from fsm import FSM
+from registry import register
 
 
 class ButtonState(UniqueIntEnum):
@@ -85,7 +86,10 @@ class ButtonFSM(FSM):
                             ButtonState.IdleUp)
 
 
+@register
 class Button(object):
+    __clsid__ = 'buttons'
+
     def __init__(self):
         self.fsm = ButtonFSM()
         self._state = self.fsm.states.default()

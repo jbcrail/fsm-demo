@@ -1,5 +1,6 @@
 from enums import UniqueIntEnum
 from fsm import FSM
+from registry import register
 
 
 class PatternState(UniqueIntEnum):
@@ -77,7 +78,10 @@ class PatternFSM(FSM):
                             PatternState.Accept)
 
 
+@register
 class Pattern(object):
+    __clsid__ = 'patterns'
+
     def __init__(self):
         self.fsm = PatternFSM()
         self._state = self.fsm.states.default()
