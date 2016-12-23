@@ -9,7 +9,7 @@ import uuid
 from flask import Flask, jsonify, redirect, render_template, send_file, url_for
 import graphviz as gv
 
-import tcp
+from machines import tcp
 
 
 SHELVE_DB = 'shelve'
