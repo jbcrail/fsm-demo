@@ -9,7 +9,7 @@ import uuid
 from flask import Flask, jsonify, redirect, render_template, send_file, url_for
 import graphviz as gv
 
-from machines import button, regex, tcp
+from machines import button, document, regex, tcp
 from registry import registry
 
 
