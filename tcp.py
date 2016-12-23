@@ -47,113 +47,101 @@ class ConnectionFSM(FSM):
     """
 
     def __init__(self):
-        super(ConnectionFSM, self).__init__(list(ConnectionState))
-
-        event_close = self.add_event(ConnectionEvent.Close)
-        event_connect = self.add_event(ConnectionEvent.Connect)
-        event_listen = self.add_event(ConnectionEvent.Listen)
-        event_receive_ack = self.add_event(ConnectionEvent.ACK)
-        event_receive_fin = self.add_event(ConnectionEvent.FIN)
-        event_receive_fin_ack = self.add_event(ConnectionEvent.FinAck)
-        event_receive_rst = self.add_event(ConnectionEvent.RST)
-        event_receive_syn = self.add_event(ConnectionEvent.SYN)
-        event_receive_syn_ack = self.add_event(ConnectionEvent.SynAck)
-        event_send = self.add_event(ConnectionEvent.Send)
-        event_timeout = self.add_event(ConnectionEvent.Timeout)
+        super(ConnectionFSM, self).__init__(ConnectionState, ConnectionEvent)
 
         self.add_transition(ConnectionState.Closed,
-                            event_listen,
+                            ConnectionEvent.Listen,
                             ConnectionState.Listen)
 
         self.add_transition(ConnectionState.Listen,
-                            event_receive_syn,
+                            ConnectionEvent.SYN,
                             ConnectionState.SynReceived)
 
         self.add_transition(ConnectionState.Listen,
-                            event_send,
+                            ConnectionEvent.Send,
                             ConnectionState.SynSent)
 
         self.add_transition(ConnectionState.SynReceived,
-                            event_receive_rst,
+                            ConnectionEvent.RST,
                             ConnectionState.Listen)
 
         self.add_transition(ConnectionState.SynReceived,
-                            event_receive_ack,
+                            ConnectionEvent.ACK,
                             ConnectionState.Established)
 
         self.add_transition(ConnectionState.SynReceived,
-                            event_close,
+                            ConnectionEvent.Close,
                             ConnectionState.FinWait1)
 
         self.add_transition(ConnectionState.SynReceived,
-                            event_timeout,
+                            ConnectionEvent.Timeout,
                             ConnectionState.Closed)
 
         self.add_transition(ConnectionState.Closed,
-                            event_connect,
+                            ConnectionEvent.Connect,
                             ConnectionState.SynSent)
 
         self.add_transition(ConnectionState.SynSent,
-                            event_close,
+                            ConnectionEvent.Close,
                             ConnectionState.Closed)
 
         self.add_transition(ConnectionState.SynSent,
-                            event_timeout,
+                            ConnectionEvent.Timeout,
                             ConnectionState.Closed)
 
         self.add_transition(ConnectionState.SynSent,
-                            event_receive_syn,
+                            ConnectionEvent.SYN,
                             ConnectionState.SynReceived)
 
         self.add_transition(ConnectionState.SynSent,
-                            event_receive_syn_ack,
+                            ConnectionEvent.SynAck,
                             ConnectionState.Established)
 
         self.add_transition(ConnectionState.Established,
-                            event_close,
+                            ConnectionEvent.Close,
                             ConnectionState.FinWait1)
 
         self.add_transition(ConnectionState.FinWait1,
-                            event_receive_ack,
+                            ConnectionEvent.ACK,
                             ConnectionState.FinWait2)
 
         self.add_transition(ConnectionState.FinWait2,
-                            event_receive_fin,
+                            ConnectionEvent.FIN,
                             ConnectionState.TimeWait)
 
         self.add_transition(ConnectionState.FinWait1,
-                            event_receive_fin_ack,
+                            ConnectionEvent.FinAck,
                             ConnectionState.TimeWait)
 
         self.add_transition(ConnectionState.FinWait1,
-                            event_receive_fin,
+                            ConnectionEvent.FIN,
                             ConnectionState.Closing)
 
         self.add_transition(ConnectionState.Closing,
-                            event_receive_ack,
+                            ConnectionEvent.ACK,
                             ConnectionState.TimeWait)
 
         self.add_transition(ConnectionState.Established,
-                            event_receive_fin,
+                            ConnectionEvent.FIN,
                             ConnectionState.CloseWait)
 
         self.add_transition(ConnectionState.CloseWait,
-                            event_close,
+                            ConnectionEvent.Close,
                             ConnectionState.LastAck)
 
         self.add_transition(ConnectionState.LastAck,
-                            event_receive_ack,
+                            ConnectionEvent.ACK,
                             ConnectionState.Closed)
 
         self.add_transition(ConnectionState.TimeWait,
-                            event_timeout,
+                            ConnectionEvent.Timeout,
                             ConnectionState.Closed)
 
 
 class Connection(object):
     def __init__(self):
-        self._state = ConnectionState.default()
         self.fsm = ConnectionFSM()
+        self._state = self.fsm.states.default()
 
     @property
     def state(self):

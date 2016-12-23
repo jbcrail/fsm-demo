@@ -24,16 +24,14 @@ class FSM(object):
     determine when to perform actions based on particular events.
     """
 
-    def __init__(self, states):
+    def __init__(self, states, events):
         """
-        Create a FSM given a unique sequence of states.
+        Create a FSM given unique collections of states and events.
 
         Raises exception if states contain duplicates.
         """
-        assert len(set(states)) == len(states), "duplicate states: %r" % states
-
-        self.states = set(states)
-        self.events = set()
+        self.states = states
+        self.events = events
         self.transitions = {}
 
     @property
@@ -41,15 +39,6 @@ class FSM(object):
         transitions = [(state0, self.transitions[(state0, event)]['state'], event)
                        for state0, event in self.transitions]
         return sorted(transitions, key=lambda t: t[2].value)
-
-    def add_event(self, event):
-        """
-        Add an event to FSM.
-
-        Returns the given event as a convenience for saving later.
-        """
-        self.events.add(event)
-        return event
 
     def add_transition(self, state0, event, state1, data=None):
         """
@@ -64,7 +53,6 @@ class FSM(object):
         assert state1 in self.states
         assert event in self.events
 
-        self.edges.append((state0, state1, event))
         self.transitions[(state0, event)] = dict(state=state1, data=data)
 
     def is_valid(self, state, event):
