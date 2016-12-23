@@ -27,7 +27,7 @@ app = Flask(__name__)
 def init(name, pk):
     key = name + ':' + str(pk)
     obj = tcp.Connection()
-    db.setdefault(key, default=dict(state=obj.fsm.states.default()))
+    db.setdefault(key, default=dict(state=obj.state))
     obj.state = obj.fsm.states(db[key]['state'])
     return obj
 
