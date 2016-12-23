@@ -1,0 +1,16 @@
+body {
+  background-color: #333333;
+  color: white;
+  font-family: Helvetica;
+}
+a:link, a:active, a:visited {
+  color: #009900;
+  text-decoration: underline;
+}
+a:hover {
+  color: #009900;
+  text-decoration: none;
+}
+.list-group-item {
+  background-color: #DFF0D8;
+}
