@@ -88,60 +88,60 @@ def render(fsm, state):
     return g.pipe(format='png')
 
 
-@app.route('/connections/<uuid>.png')
-def state_as_png(uuid):
-    obj = init('connections', uuid)
+@app.route('/<name>/<uuid>.png')
+def state_as_png(name, uuid):
+    obj = init(name, uuid)
     return send_file(io.BytesIO(render(obj.fsm, obj.state)),
                      attachment_filename=str(obj.state).lower()+'.png',
                      mimetype='image/png')
 
 
-@app.route('/connections/<uuid>.json')
-def state_as_json(uuid):
-    obj = init('connections', uuid)
+@app.route('/<name>/<uuid>.json')
+def state_as_json(name, uuid):
+    obj = init(name, uuid)
     events = []
     for edge in obj.fsm.edges:
         state0, _, event = edge
         if state0 == obj.state:
-            events.append(dict(name=event.name, url=url_for('put', uuid=uuid, event=event.name)))
+            events.append(dict(name=event.name, url=url_for('put', name=name, uuid=uuid, event=event.name)))
     return jsonify(dict(
         state=obj.state.name,
-        image_url=url_for('state_as_png', uuid=uuid),
+        image_url=url_for('state_as_png', name=name, uuid=uuid),
         events=events))
 
 
-@app.route('/connections/<uuid>/<event>', methods=['PUT'])
-def put(uuid, event):
-    obj = init('connections', uuid)
+@app.route('/<name>/<uuid>/<event>', methods=['PUT'])
+def put(name, uuid, event):
+    obj = init(name, uuid)
     if obj.fsm.move(obj, obj.fsm.events[event]):
         state1 = obj.state
-        update('connections', uuid, state1)
+        update(name, uuid, state1)
         events = []
         for edge in obj.fsm.edges:
             state0, _, event = edge
             if state0 == state1:
-                events.append(dict(name=event.name, url=url_for('put', uuid=uuid, event=event.name)))
+                events.append(dict(name=event.name, url=url_for('put', name=name, uuid=uuid, event=event.name)))
         return jsonify(dict(
             state=state1.name,
-            image_url=url_for('state_as_png', uuid=uuid),
+            image_url=url_for('state_as_png', name=name, uuid=uuid),
             events=events))
     resp = jsonify({})
     resp.status_code = 409
     return resp
 
 
-@app.route('/connections/<uuid>')
-def get(uuid):
-    obj = init('connections', uuid)
+@app.route('/<name>/<uuid>')
+def get(name, uuid):
+    obj = init(name, uuid)
     return render_template('state.html', fsm=obj.fsm, state=obj.state, uuid=uuid)
 
 
-@app.route('/connections/', methods=['POST'])
+@app.route('/<name>/', methods=['POST'])
 @app.route('/')
-def post():
+def post(name='connections'):
     uuid4 = uuid.uuid4()
-    obj = init('connections', uuid)
-    return redirect(url_for('get', uuid=uuid4))
+    obj = init(name, str(uuid4))
+    return redirect(url_for('get', name=name, uuid=uuid4))
 
 
 if __name__ == '__main__':
