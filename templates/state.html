@@ -1,5 +1,5 @@
 <!doctype html>
-<title>{{ uuid }}</title>
+<title>{{ pk }}</title>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
@@ -12,13 +12,13 @@
       <div id="valid-events" class="list-group">
       {% for edge in fsm.edges %}
       {% if edge[0] == state %}
-      <a href="#" data-target="{{ url_for('put', name='connections', uuid=uuid, event=edge[2].name) }}" class="list-group-item">{{ edge[2].name }}</a>
+      <a href="#" data-target="{{ url_for('put', name='connections', pk=pk, event=edge[2].name) }}" class="list-group-item">{{ edge[2].name }}</a>
       {% endif %}
       {% endfor %}
       </div>
     </div>
     <div class="col-xs-6">
-      <img id="state-diagram" src="{{ url_for('state_as_png', name='connections', uuid=uuid) }}" class="img-responsive" />
+      <img id="state-diagram" src="{{ url_for('state_as_png', name='connections', pk=pk) }}" class="img-responsive" />
     </div>
   </div>
 </div>

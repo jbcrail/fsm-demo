@@ -25,7 +25,7 @@ app = Flask(__name__)
 
 
 def init(name, pk):
-    key = name + ':' + pk
+    key = name + ':' + str(pk)
     obj = tcp.Connection()
     db.setdefault(key, default=dict(state=obj.fsm.states.default()))
     obj.state = obj.fsm.states(db[key]['state'])
@@ -33,7 +33,7 @@ def init(name, pk):
 
 
 def update(name, pk, state):
-    key = name + ':' + pk
+    key = name + ':' + str(pk)
     db[key]['state'] = state
 
 
@@ -88,60 +88,60 @@ def render(fsm, state):
     return g.pipe(format='png')
 
 
-@app.route('/<name>/<uuid>.png')
-def state_as_png(name, uuid):
-    obj = init(name, uuid)
+@app.route('/<name>/<uuid:pk>.png')
+def state_as_png(name, pk):
+    obj = init(name, pk)
     return send_file(io.BytesIO(render(obj.fsm, obj.state)),
                      attachment_filename=str(obj.state).lower()+'.png',
                      mimetype='image/png')
 
 
-@app.route('/<name>/<uuid>.json')
-def state_as_json(name, uuid):
-    obj = init(name, uuid)
+@app.route('/<name>/<uuid:pk>.json')
+def state_as_json(name, pk):
+    obj = init(name, pk)
     events = []
     for edge in obj.fsm.edges:
         state0, _, event = edge
         if state0 == obj.state:
-            events.append(dict(name=event.name, url=url_for('put', name=name, uuid=uuid, event=event.name)))
+            events.append(dict(name=event.name, url=url_for('put', name=name, pk=pk, event=event.name)))
     return jsonify(dict(
         state=obj.state.name,
-        image_url=url_for('state_as_png', name=name, uuid=uuid),
+        image_url=url_for('state_as_png', name=name, pk=pk),
         events=events))
 
 
-@app.route('/<name>/<uuid>/<event>', methods=['PUT'])
-def put(name, uuid, event):
-    obj = init(name, uuid)
+@app.route('/<name>/<uuid:pk>/<event>', methods=['PUT'])
+def put(name, pk, event):
+    obj = init(name, pk)
     if obj.fsm.move(obj, obj.fsm.events[event]):
         state1 = obj.state
-        update(name, uuid, state1)
+        update(name, pk, state1)
         events = []
         for edge in obj.fsm.edges:
             state0, _, event = edge
             if state0 == state1:
-                events.append(dict(name=event.name, url=url_for('put', name=name, uuid=uuid, event=event.name)))
+                events.append(dict(name=event.name, url=url_for('put', name=name, pk=pk, event=event.name)))
         return jsonify(dict(
             state=state1.name,
-            image_url=url_for('state_as_png', name=name, uuid=uuid),
+            image_url=url_for('state_as_png', name=name, pk=pk),
             events=events))
     resp = jsonify({})
     resp.status_code = 409
     return resp
 
 
-@app.route('/<name>/<uuid>')
-def get(name, uuid):
-    obj = init(name, uuid)
-    return render_template('state.html', fsm=obj.fsm, state=obj.state, uuid=uuid)
+@app.route('/<name>/<uuid:pk>')
+def get(name, pk):
+    obj = init(name, pk)
+    return render_template('state.html', fsm=obj.fsm, state=obj.state, pk=pk)
 
 
 @app.route('/<name>/', methods=['POST'])
 @app.route('/')
 def post(name='connections'):
     uuid4 = uuid.uuid4()
-    obj = init(name, str(uuid4))
-    return redirect(url_for('get', name=name, uuid=uuid4))
+    obj = init(name, uuid4)
+    return redirect(url_for('get', name=name, pk=uuid4))
 
 
 if __name__ == '__main__':
