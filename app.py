@@ -24,6 +24,19 @@ db = shelve.open(os.path.join(
 app = Flask(__name__)
 
 
+def init(name, pk):
+    key = name + ':' + pk
+    obj = tcp.Connection()
+    db.setdefault(key, default=dict(state=obj.fsm.states.default()))
+    obj.state = obj.fsm.states(db[key]['state'])
+    return obj
+
+
+def update(name, pk, state):
+    key = name + ':' + pk
+    db[key]['state'] = state
+
+
 def render(fsm, state):
     styles = {
         'graph': {
@@ -77,41 +90,34 @@ def render(fsm, state):
 
 @app.route('/connections/<uuid>.png')
 def state_as_png(uuid):
-    key = 'connections:' + uuid
-    connection = tcp.Connection()
-    connection.state = tcp.ConnectionState(db[key]['state'])
-    return send_file(io.BytesIO(render(connection.fsm, connection.state)),
-                     attachment_filename=str(connection.state).lower()+'.png',
+    obj = init('connections', uuid)
+    return send_file(io.BytesIO(render(obj.fsm, obj.state)),
+                     attachment_filename=str(obj.state).lower()+'.png',
                      mimetype='image/png')
 
 
 @app.route('/connections/<uuid>.json')
 def state_as_json(uuid):
-    key = 'connections:' + uuid
-    db.setdefault(key, default=dict(state=tcp.ConnectionState.default()))
-    connection = tcp.Connection()
-    connection.state = tcp.ConnectionState(db[key]['state'])
+    obj = init('connections', uuid)
     events = []
-    for edge in connection.fsm.edges:
+    for edge in obj.fsm.edges:
         state0, _, event = edge
-        if state0 == connection.state:
+        if state0 == obj.state:
             events.append(dict(name=event.name, url=url_for('put', uuid=uuid, event=event.name)))
     return jsonify(dict(
-        state=connection.state.name,
+        state=obj.state.name,
         image_url=url_for('state_as_png', uuid=uuid),
         events=events))
 
 
 @app.route('/connections/<uuid>/<event>', methods=['PUT'])
 def put(uuid, event):
-    key = 'connections:' + uuid
-    connection = tcp.Connection()
-    connection.state = tcp.ConnectionState(db[key]['state'])
-    if connection.fsm.move(connection, tcp.ConnectionEvent[event]):
-        state1 = connection.state
-        db[key]['state'] = state1
+    obj = init('connections', uuid)
+    if obj.fsm.move(obj, obj.fsm.events[event]):
+        state1 = obj.state
+        update('connections', uuid, state1)
         events = []
-        for edge in connection.fsm.edges:
+        for edge in obj.fsm.edges:
             state0, _, event = edge
             if state0 == state1:
                 events.append(dict(name=event.name, url=url_for('put', uuid=uuid, event=event.name)))
@@ -126,19 +132,15 @@ def put(uuid, event):
 
 @app.route('/connections/<uuid>')
 def get(uuid):
-    key = 'connections:' + uuid
-    db.setdefault(key, default=dict(state=tcp.ConnectionState.default()))
-    connection = tcp.Connection()
-    connection.state = tcp.ConnectionState(db[key]['state'])
-    return render_template('state.html', fsm=connection.fsm, state=connection.state, uuid=uuid)
+    obj = init('connections', uuid)
+    return render_template('state.html', fsm=obj.fsm, state=obj.state, uuid=uuid)
 
 
 @app.route('/connections/', methods=['POST'])
 @app.route('/')
 def post():
     uuid4 = uuid.uuid4()
-    key = 'connections:' + str(uuid4)
-    db[key] = dict(state=tcp.ConnectionState.default())
+    obj = init('connections', uuid)
     return redirect(url_for('get', uuid=uuid4))
 
 
