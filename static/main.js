@@ -21,7 +21,7 @@ function update(data) {
   $("#state-diagram").attr("src", url);
 
   // Update valid events
-  $("#valid-events").html('');
+  $("#valid-events").empty();
   $.each(data.events, function(i, evt) {
     $("#valid-events").append('<a href="#" data-target="' + evt.url + '" class="list-group-item">' + evt.name + '</a>');
   });
