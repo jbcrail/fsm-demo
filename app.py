@@ -140,7 +140,13 @@ def put(name, pk, event):
 @app.route('/<name>/<uuid:pk>')
 def get(name, pk):
     obj = init(name, pk)
-    return render_template('state.html', fsm=obj.fsm, state=obj.state, name=name, pk=pk)
+    kwargs = dict(
+        registry=registry,
+        fsm=obj.fsm,
+        state=obj.state,
+        name=name,
+        pk=pk)
+    return render_template('state.html', **kwargs)
 
 
 @app.route('/<name>/', methods=['GET', 'POST'])

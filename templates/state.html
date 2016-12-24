@@ -16,6 +16,14 @@
       {% endif %}
       {% endfor %}
       </div>
+      <br/>
+      <p>You are using the <span id="current-machine" class="label label-default">{{ registry[name].__name__ }}</span> machine.</p>
+      <p>Choose from one of the available machines:</p>
+      <div class="list-group">
+      {% for name in registry|sort %}
+      <a href="{{ url_for('post', name=name) }}" class="list-group-item">{{ registry[name].__name__ }}</a>
+      {% endfor %}
+      </div>
     </div>
     <div class="col-xs-6">
       <img id="state-diagram" src="{{ url_for('state_as_png', name=name, pk=pk) }}" class="img-responsive" />
