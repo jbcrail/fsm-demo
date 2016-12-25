@@ -100,7 +100,7 @@ def get(name, pk):
         state=obj.state,
         name=name,
         pk=pk)
-    return render_template('state.html', **kwargs)
+    return render_template('machine.html', **kwargs)
 
 
 @app.route('/machines/<name>/', methods=['GET', 'POST'])
