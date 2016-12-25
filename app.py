@@ -8,7 +8,7 @@ import shelve
 import urllib
 import uuid
 
-from flask import Flask, jsonify, redirect, render_template, send_file, url_for
+from flask import abort, Flask, jsonify, redirect, render_template, send_file, url_for
 import graphviz as gv
 
 import machines
@@ -91,54 +91,6 @@ def render(fsm, state):
     return g.pipe(format='png')
 
 
-@app.route('/<name>/<uuid:pk>.png')
-def state_as_png(name, pk):
-    obj = init(name, pk)
-    return send_file(io.BytesIO(render(obj.fsm, obj.state)),
-                     attachment_filename=str(obj.state).lower()+'.png',
-                     mimetype='image/png')
-
-
-@app.route('/<name>/<uuid:pk>.json')
-def state_as_json(name, pk):
-    obj = init(name, pk)
-    events = []
-    for edge in obj.fsm.edges:
-        state0, _, event = edge
-        if state0 == obj.state:
-            events.append(dict(
-                name=event.name,
-                url=url_for('put', name=name, pk=pk, event=event.name)
-                ))
-    return jsonify(dict(
-        state=obj.state.name,
-        image_url=url_for('state_as_png', name=name, pk=pk),
-        events=events))
-
-
-@app.route('/<name>/<uuid:pk>/<event>', methods=['PUT'])
-def put(name, pk, event):
-    obj = init(name, pk)
-    if obj.fsm.move(obj, obj.fsm.events[event]):
-        state1 = obj.state
-        update(name, pk, state1)
-        events = []
-        for edge in obj.fsm.edges:
-            state0, _, event = edge
-            if state0 == state1:
-                events.append(dict(
-                    name=event.name,
-                    url=url_for('put', name=name, pk=pk, event=event.name)
-                    ))
-        return jsonify(dict(
-            state=state1.name,
-            image_url=url_for('state_as_png', name=name, pk=pk),
-            events=events))
-    resp = jsonify({})
-    resp.status_code = 409
-    return resp
-
-
 @app.route('/<name>/<uuid:pk>')
 def get(name, pk):
     obj = init(name, pk)
@@ -159,8 +111,62 @@ def post(name='connections'):
     return redirect(url_for('get', name=name, pk=uuid4))
 
 
-@app.route("/index.json")
-def routes():
+@app.route('/favicon.ico')
+def favicon():
+    abort(404)
+
+
+@app.route('/api/<name>/<uuid:pk>.png')
+def api_state_png(name, pk):
+    obj = init(name, pk)
+    return send_file(io.BytesIO(render(obj.fsm, obj.state)),
+                     attachment_filename=str(obj.state).lower()+'.png',
+                     mimetype='image/png')
+
+
+@app.route('/api/<name>/<uuid:pk>/<event>', methods=['PUT'])
+def api_state_update(name, pk, event):
+    obj = init(name, pk)
+    if obj.fsm.move(obj, obj.fsm.events[event]):
+        state1 = obj.state
+        update(name, pk, state1)
+        events = []
+        for edge in obj.fsm.edges:
+            state0, _, event = edge
+            if state0 == state1:
+                events.append(dict(
+                    name=event.name,
+                    url=url_for('api_state_update', name=name, pk=pk, event=event.name)
+                    ))
+        return jsonify(dict(
+            state=state1.name,
+            url=url_for('api_state', name=name, pk=pk),
+            image_url=url_for('api_state_png', name=name, pk=pk),
+            events=events))
+    resp = jsonify({})
+    resp.status_code = 409
+    return resp
+
+
+@app.route('/api/<name>/<uuid:pk>')
+def api_state(name, pk):
+    obj = init(name, pk)
+    events = []
+    for edge in obj.fsm.edges:
+        state0, _, event = edge
+        if state0 == obj.state:
+            events.append(dict(
+                name=event.name,
+                url=url_for('api_state_update', name=name, pk=pk, event=event.name)
+                ))
+    return jsonify(dict(
+        state=obj.state.name,
+        image_url=url_for('api_state_png', name=name, pk=pk),
+        events=events))
+
+
+@app.route("/api")
+def api_root():
     routes = []
     for rule in app.url_map.iter_rules():
         options = {}

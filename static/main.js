@@ -1,5 +1,3 @@
-var get_url = window.location.href.replace(/#$/, "") + ".json";
-
 function fail(jqXHR, textStatus) {
   console.log("failed", jqXHR, textStatus);
 }
@@ -9,7 +7,7 @@ function trigger(url) {
 }
 
 function refresh(data) {
-  return $.ajax({url: get_url, dataType: 'json'});
+  return $.ajax({url: data.url, dataType: 'json'});
 }
 
 function update(data) {
