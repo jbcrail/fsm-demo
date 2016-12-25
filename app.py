@@ -91,7 +91,7 @@ def render(fsm, state):
     return g.pipe(format='png')
 
 
-@app.route('/<name>/<uuid:pk>')
+@app.route('/machines/<name>/<uuid:pk>')
 def get(name, pk):
     obj = init(name, pk)
     kwargs = dict(
@@ -103,7 +103,8 @@ def get(name, pk):
     return render_template('state.html', **kwargs)
 
 
-@app.route('/<name>/', methods=['GET', 'POST'])
+@app.route('/machines/<name>/', methods=['GET', 'POST'])
+@app.route('/machines/', methods=['GET', 'POST'])
 @app.route('/')
 def post(name='connections'):
     uuid4 = uuid.uuid4()
