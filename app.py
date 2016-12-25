@@ -1,9 +1,11 @@
 from contextlib import closing
 import io
 import logging
+from operator import itemgetter
 import os
 from pickle import HIGHEST_PROTOCOL
 import shelve
+import urllib
 import uuid
 
 from flask import Flask, jsonify, redirect, render_template, send_file, url_for
@@ -155,6 +157,21 @@ def post(name='connections'):
     uuid4 = uuid.uuid4()
     init(name, uuid4)
     return redirect(url_for('get', name=name, pk=uuid4))
+
+
+@app.route("/index.json")
+def routes():
+    routes = []
+    for rule in app.url_map.iter_rules():
+        options = {}
+        for arg in rule.arguments:
+            options[arg] = "[{0}]".format(arg)
+        url = urllib.parse.unquote(url_for(rule.endpoint, **options))
+        routes.append(dict(
+            endpoint=rule.endpoint,
+            methods=sorted(list(rule.methods)),
+            url=url))
+    return jsonify(sorted(routes, key=itemgetter('url')))
 
 
 if __name__ == '__main__':
